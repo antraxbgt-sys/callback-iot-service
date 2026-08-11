@@ -1,0 +1,12 @@
+{
+  "name": "callback-iot-service",
+  "version": "1.0.0",
+  "description": "Servicio callback para recibir datos de estudiantes",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
