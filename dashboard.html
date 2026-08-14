@@ -27,9 +27,6 @@
             margin: 0 auto;
         }
 
-        /* ============================
-                   HEADER
-                ============================ */
         header {
             text-align: center;
             padding: 20px 0 30px;
@@ -82,9 +79,6 @@
             }
         }
 
-        /* ============================
-                   TARJETAS DE ESTADÍSTICAS
-                ============================ */
         .stats {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -127,9 +121,6 @@
             color: #4ecdc4;
         }
 
-        /* ============================
-                   TABLA DE DATOS
-                ============================ */
         .section {
             background: #111128;
             border-radius: 16px;
@@ -216,9 +207,6 @@
             font-weight: 600;
         }
 
-        /* ============================
-                   SIN DATOS
-                ============================ */
         .empty-state {
             text-align: center;
             padding: 40px 20px;
@@ -230,9 +218,40 @@
             margin-bottom: 10px;
         }
 
-        /* ============================
-                   RESPONSIVE
-                ============================ */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #1a1a3a;
+            border: 1px solid #2a2a4a;
+            border-radius: 12px;
+            padding: 12px 20px;
+            color: #e0e0e0;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            transform: translateY(120px);
+            opacity: 0;
+            transition: all 0.4s ease;
+            font-size: 0.9rem;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            border-color: #00cc88;
+        }
+
+        .toast.error {
+            border-color: #ff4444;
+        }
+
+        .toast.info {
+            border-color: #00d4ff;
+        }
+
         @media (max-width: 768px) {
             header h1 {
                 font-size: 1.8rem;
@@ -273,52 +292,12 @@
                 text-align: center;
             }
         }
-
-        /* ============================
-                   TOAST
-                ============================ */
-        .toast {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background: #1a1a3a;
-            border: 1px solid #2a2a4a;
-            border-radius: 12px;
-            padding: 12px 20px;
-            color: #e0e0e0;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-            transform: translateY(120px);
-            opacity: 0;
-            transition: all 0.4s ease;
-            font-size: 0.9rem;
-            z-index: 1000;
-        }
-
-        .toast.show {
-            transform: translateY(0);
-            opacity: 1;
-        }
-
-        .toast.success {
-            border-color: #00cc88;
-        }
-
-        .toast.error {
-            border-color: #ff4444;
-        }
-
-        .toast.info {
-            border-color: #00d4ff;
-        }
     </style>
 </head>
 <body>
 
     <div class="container">
 
-        <!-- ============================
-        HEADER
-        ============================ -->
         <header>
             <h1>📊 Dashboard IoT</h1>
             <p>Datos recolectados desde estudiantes y ESP32</p>
@@ -329,9 +308,6 @@
             </div>
         </header>
 
-        <!-- ============================
-        TARJETAS DE ESTADÍSTICAS
-        ============================ -->
         <div class="stats">
             <div class="stat-card">
                 <div class="label">📦 Total de registros</div>
@@ -351,9 +327,6 @@
             </div>
         </div>
 
-        <!-- ============================
-        TABLA DE DATOS
-        ============================ -->
         <div class="section">
             <div class="section-title">
                 📋 Registros
@@ -385,34 +358,19 @@
             </div>
         </div>
 
-        <!-- ============================
-        FOOTER
-        ============================ -->
         <footer style="text-align:center;padding:20px 0 10px;color:#333355;font-size:0.75rem;border-top:1px solid #111128;">
             Dashboard IoT · Datos en tiempo real
         </footer>
 
     </div>
 
-    <!-- ============================
-    TOAST
-    ============================ -->
     <div class="toast" id="toast">
         <span id="toastMessage">✅ Datos actualizados</span>
     </div>
 
-    <!-- ============================
-    JAVASCRIPT
-    ============================ -->
     <script>
-        // ============================
-        // CONFIGURACIÓN
-        // ============================
-        const API_URL = 'https://callback-iot-service-production.up.railway.app/data';
+        const API_URL = '/data';
 
-        // ============================
-        // TOAST
-        // ============================
         function mostrarToast(mensaje, tipo = 'info') {
             const toast = document.getElementById('toast');
             toast.textContent = mensaje;
@@ -425,17 +383,11 @@
             }, 2500);
         }
 
-        // ============================
-        // ACTUALIZAR HORA
-        // ============================
         function actualizarHora() {
             const ahora = new Date();
             document.getElementById('lastUpdate').textContent = '🕐 ' + ahora.toLocaleTimeString();
         }
 
-        // ============================
-        // CARGAR DATOS DESDE LA API
-        // ============================
         async function cargarDatos() {
             const statusText = document.getElementById('statusText');
             const tablaBody = document.getElementById('tablaBody');
@@ -452,13 +404,27 @@
 
                 const datos = await respuesta.json();
 
-                // Verificar que sea un array
                 if (!Array.isArray(datos)) {
                     throw new Error('Los datos no son un array');
                 }
 
                 // Actualizar estadísticas
-                actualizarEstadisticas(datos);
+                document.getElementById('totalRecords').textContent = datos.length;
+
+                if (datos.length > 0) {
+                    const ultimo = datos[datos.length - 1];
+                    document.getElementById('lastTemp').textContent = ultimo.temperature ? ultimo.temperature + ' °C' : '--';
+                    document.getElementById('lastHum').textContent = ultimo.humidity ? ultimo.humidity + ' %' : '--';
+                } else {
+                    document.getElementById('lastTemp').textContent = '--';
+                    document.getElementById('lastHum').textContent = '--';
+                }
+
+                const dispositivos = new Set();
+                datos.forEach(item => {
+                    if (item.device) dispositivos.add(item.device);
+                });
+                document.getElementById('totalDevices').textContent = dispositivos.size;
 
                 // Actualizar tabla
                 if (datos.length === 0) {
@@ -472,13 +438,30 @@
                                 </tr>
                             `;
                 } else {
-                    renderizarTabla(datos);
+                    const registros = datos.slice(-50).reverse();
+                    let html = '';
+                    registros.forEach(item => {
+                        const temp = item.temperature || '--';
+                        const hum = item.humidity || '--';
+                        const device = item.device || 'Desconocido';
+                        const location = item.location || '--';
+                        const timestamp = item.timestamp ? new Date(item.timestamp).toLocaleString() : '--';
+
+                        html += `
+                                    <tr>
+                                        <td><span style="color:#00d4ff;">${device}</span></td>
+                                        <td class="temp-highlight">${temp} °C</td>
+                                        <td class="hum-highlight">${hum} %</td>
+                                        <td>${location}</td>
+                                        <td style="font-size:0.75rem;color:#666888;">${timestamp}</td>
+                                    </tr>
+                                `;
+                    });
+                    tablaBody.innerHTML = html;
                 }
 
-                // Actualizar conteo
                 document.getElementById('recordCount').textContent = datos.length + ' registros';
 
-                // Actualizar estado
                 statusText.textContent = 'Conectado';
                 statusText.style.color = '#00ff88';
                 actualizarHora();
@@ -493,73 +476,10 @@
             }
         }
 
-        // ============================
-        // ACTUALIZAR ESTADÍSTICAS
-        // ============================
-        function actualizarEstadisticas(datos) {
-            // Total de registros
-            document.getElementById('totalRecords').textContent = datos.length;
-
-            // Último registro
-            if (datos.length > 0) {
-                const ultimo = datos[datos.length - 1];
-                document.getElementById('lastTemp').textContent = ultimo.temperature ? ultimo.temperature + ' °C' : '--';
-                document.getElementById('lastHum').textContent = ultimo.humidity ? ultimo.humidity + ' %' : '--';
-            } else {
-                document.getElementById('lastTemp').textContent = '--';
-                document.getElementById('lastHum').textContent = '--';
-            }
-
-            // Contar dispositivos únicos
-            const dispositivos = new Set();
-            datos.forEach(item => {
-                if (item.device) dispositivos.add(item.device);
-            });
-            document.getElementById('totalDevices').textContent = dispositivos.size;
-        }
-
-        // ============================
-        // RENDERIZAR TABLA
-        // ============================
-        function renderizarTabla(datos) {
-            const tablaBody = document.getElementById('tablaBody');
-
-            // Mostrar los últimos 50 registros (para no saturar)
-            const registros = datos.slice(-50).reverse();
-
-            let html = '';
-            registros.forEach(item => {
-                const temp = item.temperature || '--';
-                const hum = item.humidity || '--';
-                const device = item.device || 'Desconocido';
-                const location = item.location || '--';
-                const timestamp = item.timestamp ? new Date(item.timestamp).toLocaleString() : '--';
-
-                html += `
-                            <tr>
-                                <td><span style="color:#00d4ff;">${device}</span></td>
-                                <td class="temp-highlight">${temp} °C</td>
-                                <td class="hum-highlight">${hum} %</td>
-                                <td>${location}</td>
-                                <td style="font-size:0.75rem;color:#666888;">${timestamp}</td>
-                            </tr>
-                        `;
-            });
-
-            tablaBody.innerHTML = html;
-        }
-
-        // ============================
-        // CARGA INICIAL
-        // ============================
         document.addEventListener('DOMContentLoaded', () => {
             cargarDatos();
             actualizarHora();
-
-            // Actualizar cada 15 segundos
-            setInterval(() => {
-                cargarDatos();
-            }, 15000);
+            setInterval(cargarDatos, 15000);
         });
     </script>
 
