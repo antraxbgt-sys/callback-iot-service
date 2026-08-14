@@ -1,13 +1,17 @@
 const express = require('express');
 const fs = require('fs');
+const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware para recibir JSON
+// ============================================
+// MIDDLEWARE
+// ============================================
 app.use(express.json());
+app.use(express.static('public'));
 
 // ============================================
-// POST /data - Recibe datos de los estudiantes
+// POST /data - Recibe datos de estudiantes y ESP32
 // ============================================
 app.post("/data", (req, res) => {
     const datosRecibidos = req.body;
@@ -74,6 +78,13 @@ app.get("/data", (req, res) => {
 });
 
 // ============================================
+// GET /dashboard - Dashboard web
+// ============================================
+app.get("/dashboard", (req, res) => {
+    res.sendFile(path.join(__dirname, 'dashboard.html'));
+});
+
+// ============================================
 // GET / - Estado del servicio
 // ============================================
 app.get("/", (req, res) => {
@@ -81,12 +92,13 @@ app.get("/", (req, res) => {
         servicio: "Callback IoT para Estudiantes",
         endpoints: {
             "POST /data": "Enviar datos de sensores",
-            "GET /data": "Ver todos los datos"
+            "GET /data": "Ver todos los datos",
+            "GET /dashboard": "Dashboard web"
         },
         instrucciones: {
             metodo: "POST",
-            url: "https://tu-dominio.railway.app/data",
-            body: '{"temperatura": 25.5, "humedad": 60}',
+            url: "https://callback-iot-service-production.up.railway.app/data",
+            body: '{"temperatura": 25.5, "humedad": 60, "device": "mi_sensor"}',
             headers: '{"Content-Type": "application/json"}'
         }
     });
@@ -97,4 +109,7 @@ app.get("/", (req, res) => {
 // ============================================
 app.listen(PORT, () => {
     console.log(`✅ Servicio funcionando en puerto ${PORT}`);
+    console.log(`📊 GET /data  -> https://callback-iot-service-production.up.railway.app/data`);
+    console.log(`📤 POST /data -> https://callback-iot-service-production.up.railway.app/data`);
+    console.log(`📱 Dashboard -> https://callback-iot-service-production.up.railway.app/dashboard`);
 });
